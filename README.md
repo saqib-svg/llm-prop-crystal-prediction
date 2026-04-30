@@ -6,6 +6,16 @@ Predict the **band gap (eV)** of crystalline materials from plain-text descripti
 - **Training data:** ~124k material descriptions (LLM-Prop dataset)
 - **Stack:** PyTorch + Hugging Face Transformers · FastAPI · React + Vite + Tailwind
 
+## Quick Start on Windows
+
+After downloading or cloning the project, double-click:
+
+```text
+start-app.bat
+```
+
+It creates the Python environment, installs backend and frontend dependencies, starts both servers, and opens the app in your browser.
+
 ---
 
 ## Prerequisites
