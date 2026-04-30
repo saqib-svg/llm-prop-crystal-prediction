@@ -5,4 +5,3 @@ __pycache__/
 *.pyc
 .env
 .env.*
-data/lllmprop_v.1_data_train.csv
