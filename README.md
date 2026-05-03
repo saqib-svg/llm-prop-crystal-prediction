@@ -1,162 +1,146 @@
 # Band Gap Predictor
 
-Predict the **band gap (eV)** of crystalline materials from plain-text descriptions using a fine-tuned **DistilRoBERTa-base** Transformer regression model.
+Predict the band gap (eV) of crystalline materials from plain-text descriptions using a fine-tuned DistilRoBERTa-base Transformer regression model.
 
-- **Best Validation MAE:** 0.3411 eV
-- **Training data:** ~124k material descriptions (LLM-Prop dataset)
-- **Stack:** PyTorch + Hugging Face Transformers · FastAPI · React + Vite + Tailwind
+- Best validation MAE: 0.3411 eV
+- Training data: about 124k material descriptions from the LLM-Prop dataset
+- Stack: PyTorch, Hugging Face Transformers, FastAPI, Next.js, NextAuth.js, Tailwind CSS
+
+## Project Structure
+
+```text
+.
+|-- data/                 Dataset CSV files
+|-- inference/            Prediction notebook
+|-- models/               Trained model and tokenizer files
+|-- preprocessing/        Data conversion helpers
+|-- server/               FastAPI backend
+|-- src/app/              Next.js App Router frontend
+|   |-- api/auth/         NextAuth.js Google auth route
+|   |-- layout.tsx        Root layout with session provider
+|   |-- page.tsx          Homepage
+|   `-- providers.tsx     NextAuth SessionProvider
+|-- training/             Model training script
+|-- requirements.txt      Python backend dependencies
+|-- package.json          Node/Next.js dependencies and scripts
+`-- start-app.bat         Windows one-click launcher
+```
 
 ## Quick Start on Windows
 
-After downloading or cloning the project, double-click:
+Double-click:
 
 ```text
 start-app.bat
 ```
 
-It creates the Python environment, installs backend and frontend dependencies, starts both servers, and opens the app in your browser.
-
----
+The script creates `.venv`, installs Python dependencies from `requirements.txt`, installs npm dependencies when needed, starts the FastAPI backend on `http://127.0.0.1:8000`, starts Next.js on `http://localhost:3000`, and opens the app.
 
 ## Prerequisites
 
 | Tool | Version |
-|------|---------|
-| Python | ≥ 3.10 |
-| Node.js | ≥ 18 |
-| pip | ≥ 23 |
+| --- | --- |
+| Python | 3.10 or newer |
+| Node.js | 18 or newer |
+| npm | Included with Node.js |
 
-Ensure model files exist at their expected paths (already included):
+The model files should exist at:
 
-```
+```text
 models/
-  best_bandgap_model.pt   ← trained PyTorch weights (~314 MB)
-  tokenizer/              ← saved DistilRoBERTa tokenizer
+  best_bandgap_model.pt
+  tokenizer/
 ```
 
----
+## Environment Variables
 
-## 1 — Start the FastAPI Backend
+Create or update `.env` in the project root:
+
+```env
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+NEXTAUTH_SECRET=your_random_secret
+NEXTAUTH_URL=http://localhost:3000
+```
+
+For Google OAuth, add this redirect URI in Google Cloud Console:
+
+```text
+http://localhost:3000/api/auth/callback/google
+```
+
+Optional backend variables:
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `MODEL_PATH` | `models/best_bandgap_model.pt` | Path to model weights |
+| `TOKENIZER_DIR` | `models/tokenizer` | Path to tokenizer directory |
+| `MODEL_DEVICE` | auto | Force `cpu`, `cuda`, etc. |
+| `LOG_LEVEL` | `INFO` | Backend logging level |
+| `CORS_ORIGINS` | set by `start-app.bat` | Allowed frontend origins |
+
+## Manual Backend Start
 
 ```powershell
-# From the project root
-cd "Deep Learning Band Gap Predictor"
-
-# (First time) create and activate a virtual environment
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-
-# Install dependencies
-pip install -r backend/requirements.txt
-
-# Run the API server
-python -m uvicorn backend.app:app --host 127.0.0.1 --port 8000
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+$env:CORS_ORIGINS="http://localhost:3000,http://127.0.0.1:3000"
+python -m uvicorn server.app:app --host 127.0.0.1 --port 8000
 ```
 
-Test the backend is live:
+Health check:
 
 ```powershell
 curl http://127.0.0.1:8000/health
-# → {"status":"ok","model_ready":true,"device":"cpu"}
 ```
 
-Test a prediction:
+## Manual Frontend Start
+
+Open a second terminal:
 
 ```powershell
-curl -X POST http://127.0.0.1:8000/predict-bandgap `
-  -H "Content-Type: application/json" `
-  -d '{"text": "Silicon crystallizes in diamond cubic structure and is an indirect semiconductor."}'
-# → {"prediction": 1.12xx, "unit": "eV"}
-```
-
----
-
-## 2 — Start the React Frontend
-
-Open a **second terminal** (keep the backend running):
-
-```powershell
-# Install npm dependencies (first time only)
 npm install
-
-# Start dev server
 npm run dev
 ```
 
-Then open **http://localhost:5173** in your browser.
+Then open:
 
-> The Vite dev server proxies `/predict-bandgap`, `/batch-predict`, and `/health`
-> requests to `http://127.0.0.1:8000` automatically — no CORS configuration needed.
-
----
+```text
+http://localhost:3000
+```
 
 ## API Reference
 
 ### `GET /health`
+
 Returns model status.
+
 ```json
 { "status": "ok", "model_ready": true, "device": "cpu" }
 ```
 
 ### `POST /predict-bandgap`
+
 Single-text inference.
 
-**Request:**
 ```json
-{ "text": "ZnO crystallizes in the hexagonal P6_3mc space group..." }
-```
-**Response:**
-```json
-{ "prediction": 3.3471, "unit": "eV" }
+{ "text": "Silicon crystallizes in diamond cubic structure and is an indirect semiconductor." }
 ```
 
 ### `POST /batch-predict`
-Batch inference (up to 100 texts per request).
 
-**Request:**
+Batch inference, up to 100 texts per request.
+
 ```json
 { "texts": ["Si description...", "GaAs description..."] }
 ```
-**Response:**
-```json
-{
-  "results": [
-    { "index": 0, "text": "...", "prediction": 1.1234, "unit": "eV", "error": null },
-    { "index": 1, "text": "...", "prediction": 1.4210, "unit": "eV", "error": null }
-  ],
-  "total": 2,
-  "succeeded": 2,
-  "failed": 0
-}
+
+## Useful Commands
+
+```powershell
+npm run dev
+npm run build
+python -m uvicorn server.app:app --host 127.0.0.1 --port 8000
 ```
-
----
-
-## Environment Variables (Optional)
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `MODEL_PATH` | `models/best_bandgap_model.pt` | Path to model weights |
-| `TOKENIZER_DIR` | `models/tokenizer` | Path to tokenizer directory |
-| `MODEL_DEVICE` | auto (cuda/cpu) | Force a specific device |
-| `LOG_LEVEL` | `INFO` | Logging level |
-| `CORS_ORIGINS` | `http://localhost:5173,...` | Allowed CORS origins |
-| `VITE_BANDGAP_API_BASE_URL` | *(empty = use proxy)* | Frontend API base URL |
-
----
-
-## Model Architecture
-
-```
-Input Text
-  → DistilRoBERTa-base Tokenizer (max 256 tokens)
-  → DistilRoBERTa Encoder (6 layers, hidden_size=768)
-  → Mean Pooling over token embeddings
-  → Dropout(0.1)
-  → Linear(768 → 256) + ReLU
-  → Dropout(0.1)
-  → Linear(256 → 1)
-  → Predicted Band Gap (float, in eV)
-```
-
-**Training:** AdamW · LR 2e-5 → 1e-5 · Cosine warmup · L1 Loss · Batch size 8

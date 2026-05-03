@@ -25,10 +25,28 @@ if errorlevel 1 (
   set "PYTHON=py -3"
 )
 
-where npm >nul 2>nul
+where npm.cmd >nul 2>nul
 if errorlevel 1 (
   echo Node.js/npm was not found. Install Node.js 18 or newer, then run this file again.
   echo https://nodejs.org/
+  pause
+  exit /b 1
+)
+
+if not exist "server\app.py" (
+  echo server\app.py was not found. Run this file from the project root.
+  pause
+  exit /b 1
+)
+
+if not exist "requirements.txt" (
+  echo requirements.txt was not found. Run this file from the project root.
+  pause
+  exit /b 1
+)
+
+if not exist "package.json" (
+  echo package.json was not found. Run this file from the project root.
   pause
   exit /b 1
 )
@@ -43,9 +61,9 @@ if not exist ".venv\Scripts\python.exe" (
   )
 )
 
-echo Installing backend dependencies...
+echo Installing backend dependencies from requirements.txt...
 call ".venv\Scripts\python.exe" -m pip install --upgrade pip
-call ".venv\Scripts\python.exe" -m pip install -r backend\requirements.txt
+call ".venv\Scripts\python.exe" -m pip install -r requirements.txt
 if errorlevel 1 (
   echo Failed to install backend dependencies.
   pause
@@ -54,7 +72,7 @@ if errorlevel 1 (
 
 if not exist "node_modules" (
   echo Installing frontend dependencies...
-  call npm install
+  call npm.cmd install
   if errorlevel 1 (
     echo Failed to install frontend dependencies.
     pause
@@ -66,13 +84,13 @@ if not exist "node_modules" (
 
 echo.
 echo Starting backend at http://127.0.0.1:8000 ...
-start "Band Gap Predictor Backend" /D "%~dp0" cmd /k ".venv\Scripts\python.exe -m uvicorn backend.app:app --host 127.0.0.1 --port 8000"
+start "Band Gap Predictor Backend" /D "%~dp0" cmd /k "set CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000&& .venv\Scripts\python.exe -m uvicorn server.app:app --host 127.0.0.1 --port 8000"
 
-echo Starting frontend at http://localhost:5173 ...
-start "Band Gap Predictor Frontend" /D "%~dp0" cmd /k "npm run dev"
+echo Starting Next.js frontend at http://localhost:3000 ...
+start "Band Gap Predictor Frontend" /D "%~dp0" cmd /k "npm.cmd run dev"
 
-timeout /t 3 /nobreak >nul
-start "" "http://localhost:5173"
+timeout /t 5 /nobreak >nul
+start "" "http://localhost:3000"
 
 echo.
 echo Done. Keep the two server windows open while using the app.
