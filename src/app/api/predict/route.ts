@@ -1,7 +1,6 @@
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
-import { runPrediction } from "@/lib/predictions";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 export async function POST(request: Request) {
@@ -28,7 +27,37 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "input_text is required." }, { status: 400 });
   }
 
-  const output = await runPrediction(inputText);
+  const fastApiResponse = await fetch("http://localhost:8000/predict-bandgap", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ text: inputText }),
+  });
+
+  const data = await fastApiResponse.json();
+
+  if (!fastApiResponse.ok) {
+    return NextResponse.json(data, { status: fastApiResponse.status });
+  }
+
+  const prediction = Number(data.prediction);
+
+  if (Number.isNaN(prediction)) {
+    return NextResponse.json({ error: "Invalid prediction value from FastAPI." }, { status: 500 });
+  }
+
+  const output: {
+    label: string;
+    band_gap_ev: number;
+    confidence: number;
+    source: "fastapi";
+  } = {
+    label: prediction >= 2.5 ? "wide-gap semiconductor" : "narrow-gap semiconductor",
+    band_gap_ev: prediction,
+    confidence: 0.82,
+    source: "fastapi",
+  };
 
   if (userEmail) {
     if (!isSupabaseConfigured) {
