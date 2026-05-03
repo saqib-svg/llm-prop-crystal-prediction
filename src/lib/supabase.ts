@@ -4,7 +4,7 @@ export type PredictionOutput = {
   label: string;
   band_gap_ev: number;
   confidence: number;
-  source: "mock";
+  source: "mock" | "fastapi";
 };
 
 type Database = {
