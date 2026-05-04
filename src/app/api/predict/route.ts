@@ -4,79 +4,96 @@ import { authOptions } from "@/lib/auth";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
-  const userEmail = session?.user?.email;
-
-  let body: unknown;
-
   try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
-  }
+    const session = await getServerSession(authOptions);
+    const userEmail = session?.user?.email;
 
-  const inputText =
-    typeof body === "object" &&
-    body !== null &&
-    "input_text" in body &&
-    typeof body.input_text === "string"
-      ? body.input_text.trim()
-      : "";
+    let body: unknown;
 
-  if (!inputText) {
-    return NextResponse.json({ error: "input_text is required." }, { status: 400 });
-  }
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
+    }
 
-  const fastApiResponse = await fetch("http://localhost:8000/predict-bandgap", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ text: inputText }),
-  });
+    const inputText =
+      typeof body === "object" &&
+      body !== null &&
+      (typeof (body as any).input === "string" || typeof (body as any).input_text === "string")
+        ? ((body as any).input ?? (body as any).input_text).trim()
+        : "";
 
-  const data = await fastApiResponse.json();
+    if (!inputText) {
+      return NextResponse.json({ error: "input is required." }, { status: 400 });
+    }
 
-  if (!fastApiResponse.ok) {
-    return NextResponse.json(data, { status: fastApiResponse.status });
-  }
+    const fastApiResponse = await fetch("http://localhost:8000/predict", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ input: inputText }),
+    });
 
-  const prediction = Number(data.prediction);
-
-  if (Number.isNaN(prediction)) {
-    return NextResponse.json({ error: "Invalid prediction value from FastAPI." }, { status: 500 });
-  }
-
-  const output: {
-    label: string;
-    band_gap_ev: number;
-    confidence: number;
-    source: "fastapi";
-  } = {
-    label: prediction >= 2.5 ? "wide-gap semiconductor" : "narrow-gap semiconductor",
-    band_gap_ev: prediction,
-    confidence: 0.82,
-    source: "fastapi",
-  };
-
-  if (userEmail) {
-    if (!isSupabaseConfigured) {
+    let data: unknown;
+    try {
+      data = await fastApiResponse.json();
+    } catch (parseError) {
+      const text = await fastApiResponse.text();
       return NextResponse.json(
-        { error: "Supabase environment variables are not configured." },
-        { status: 500 },
+        { error: "FastAPI response was not valid JSON.", details: text },
+        { status: fastApiResponse.ok ? 500 : fastApiResponse.status },
       );
     }
 
-    const { error } = await supabase.from("history").insert({
-      user_email: userEmail,
-      input_text: inputText,
-      output,
-    });
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (!fastApiResponse.ok) {
+      return NextResponse.json(data, { status: fastApiResponse.status });
     }
-  }
 
-  return NextResponse.json({ output });
+    const label = typeof (data as any).prediction === "string"
+      ? (data as any).prediction
+      : String((data as any).prediction ?? "Unknown");
+    const bandGap = typeof (data as any).band_gap === "number"
+      ? (data as any).band_gap
+      : typeof (data as any).prediction === "number"
+      ? (data as any).prediction
+      : null;
+
+    if (bandGap === null || Number.isNaN(bandGap)) {
+      return NextResponse.json({ error: "Invalid band_gap value from FastAPI." }, { status: 500 });
+    }
+
+    const output = {
+      label,
+      band_gap_ev: bandGap,
+      confidence: 0.82,
+      source: "fastapi",
+    } as const;
+
+    if (userEmail) {
+      if (!isSupabaseConfigured) {
+        return NextResponse.json(
+          { error: "Supabase environment variables are not configured." },
+          { status: 500 },
+        );
+      }
+
+      const { error } = await supabase.from("history").insert([
+        {
+          user_email: userEmail,
+          input_text: inputText,
+          output,
+        },
+      ]);
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+    }
+
+    return NextResponse.json({ output });
+  } catch (error) {
+    console.error("Prediction route error:", error);
+    return NextResponse.json({ error: "Prediction failed." }, { status: 500 });
+  }
 }

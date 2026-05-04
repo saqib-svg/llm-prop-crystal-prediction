@@ -6,7 +6,7 @@ import unicodedata
 
 import torch
 
-from server.model_loader import ModelBundle
+from model_loader import ModelBundle
 
 
 class BandGapPredictor:
