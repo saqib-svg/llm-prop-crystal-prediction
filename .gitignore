@@ -25,3 +25,4 @@ Thumbs.db
 *.sqlite
 *.sqlite3
 *.db
+worker\models\bandgap\best_bandgap_model.pt
