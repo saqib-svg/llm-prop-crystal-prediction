@@ -6,7 +6,9 @@ import { useSession } from 'next-auth/react';
 import { AlertCircle, History, Loader2, Sparkles, WandSparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { predictBandGap } from '../lib/bandgapApi';
+import { getPredictionHistory } from '@/services/history/historyService';
+import { predictBandGap } from '@/services/prediction/predictionService';
+import type { HistoryItem } from '@/types/prediction';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Textarea } from './ui/textarea';
@@ -42,15 +44,6 @@ interface HistoryEntry {
   timestamp: Date;
 }
 
-interface HistoryApiItem {
-  id: string;
-  input_text: string;
-  output: {
-    band_gap_ev: number;
-  };
-  created_at: string;
-}
-
 function getBandGapCategory(eV: number): { label: string; className: string } {
   if (eV <= 0.01) return { label: 'Metal / Semimetal', className: 'bg-white/10 text-white ring-1 ring-white/20' };
   if (eV < 2) return { label: 'Semiconductor', className: 'bg-yellow-500/10 text-yellow-400 ring-1 ring-yellow-500/20' };
@@ -81,21 +74,8 @@ export function BandGapPredictor() {
 
     setHistoryLoading(true);
     try {
-      const response = await fetch('/api/history');
-      const payload: unknown = await response.json();
-
-      if (!response.ok) {
-        const message =
-          payload && typeof payload === 'object' && 'error' in payload && typeof payload.error === 'string'
-            ? payload.error
-            : 'Unable to load prediction history.';
-        throw new Error(message);
-      }
-
-      const rows =
-        payload && typeof payload === 'object' && 'history' in payload && Array.isArray(payload.history)
-          ? (payload.history as HistoryApiItem[])
-          : [];
+      const payload = await getPredictionHistory();
+      const rows: HistoryItem[] = Array.isArray(payload.history) ? payload.history : [];
 
       setHistory(rows.map((row) => ({
         id: row.id,

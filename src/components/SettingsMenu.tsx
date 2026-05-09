@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { signOut, useSession } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { Settings, Moon, Sun, Flag, Info, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
 import { toast } from 'sonner';
+import { signOutUser } from '@/services/auth/authService';
 
 export function SettingsMenu() {
   const { data: session } = useSession();
@@ -90,7 +91,7 @@ export function SettingsMenu() {
 
           {session?.user?.email && (
             <>
-              <DropdownMenuItem onClick={() => signOut()}>
+              <DropdownMenuItem onClick={() => signOutUser()}>
                 <LogOut className="size-4 mr-2" />
                 Sign out
               </DropdownMenuItem>

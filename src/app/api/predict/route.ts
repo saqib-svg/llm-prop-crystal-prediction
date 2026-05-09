@@ -1,7 +1,9 @@
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
-import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { prisma } from "@/lib/prisma";
+
+const WORKER_API_URL = process.env.WORKER_API_URL ?? "http://localhost:8000";
 
 export async function POST(request: Request) {
   try {
@@ -16,6 +18,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
     }
 
+    const model =
+      typeof body === "object" && body !== null && typeof (body as any).model === "string"
+        ? (body as any).model.trim()
+        : "bandgap";
     const inputText =
       typeof body === "object" &&
       body !== null &&
@@ -27,12 +33,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "input is required." }, { status: 400 });
     }
 
-    const fastApiResponse = await fetch("http://localhost:8000/predict", {
+    const fastApiResponse = await fetch(`${WORKER_API_URL}/predict`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ input: inputText }),
+      body: JSON.stringify({ model, input: inputText }),
     });
 
     let data: unknown;
@@ -71,23 +77,24 @@ export async function POST(request: Request) {
     } as const;
 
     if (userEmail) {
-      if (!isSupabaseConfigured) {
-        return NextResponse.json(
-          { error: "Supabase environment variables are not configured." },
-          { status: 500 },
-        );
-      }
+      try {
+        const user = await prisma.user.findUnique({
+          where: { email: userEmail },
+        });
 
-      const { error } = await supabase.from("history").insert([
-        {
-          user_email: userEmail,
-          input_text: inputText,
-          output,
-        },
-      ]);
-
-      if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        if (user) {
+          await prisma.predictionHistory.create({
+            data: {
+              prompt: inputText,
+              result: output,
+              userId: user.id,
+            },
+          });
+        }
+      } catch (dbError) {
+        console.error("Database error saving prediction:", dbError);
+        // Don't fail the request if we can't save to database
+        // The prediction is still returned to the user
       }
     }
 

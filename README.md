@@ -4,7 +4,7 @@ Predict the band gap (eV) of crystalline materials from plain-text descriptions 
 
 - Best validation MAE: 0.3411 eV
 - Training data: about 124k material descriptions from the LLM-Prop dataset
-- Stack: PyTorch, Hugging Face Transformers, FastAPI, Next.js, NextAuth.js, Tailwind CSS
+- Stack: PyTorch, Hugging Face Transformers, FastAPI, Next.js, NextAuth.js, PostgreSQL, Prisma, Tailwind CSS
 
 ## Project Structure
 
@@ -14,15 +14,23 @@ Predict the band gap (eV) of crystalline materials from plain-text descriptions 
 |-- inference/            Prediction notebook
 |-- models/               Trained model and tokenizer files
 |-- preprocessing/        Data conversion helpers
+|-- prisma/               Prisma schema and migrations
 |-- server/               FastAPI backend
 |-- src/app/              Next.js App Router frontend
 |   |-- api/auth/         NextAuth.js Google auth route
 |   |-- layout.tsx        Root layout with session provider
 |   |-- page.tsx          Homepage
 |   `-- providers.tsx     NextAuth SessionProvider
+|-- src/lib/              Shared utilities and configuration
+|   |-- auth.ts           NextAuth configuration with JWT strategy
+|   |-- prisma.ts         Prisma client singleton
+|   |-- predictions.ts    Prediction API functions
+|   `-- users.ts          User database functions
 |-- training/             Model training script
 |-- requirements.txt      Python backend dependencies
 |-- package.json          Node/Next.js dependencies and scripts
+|-- DATABASE_SETUP.md     Database setup instructions
+|-- MIGRATION.md          Migration guide from Supabase
 `-- start-app.bat         Windows one-click launcher
 ```
 
@@ -43,6 +51,7 @@ The script creates `.venv`, installs Python dependencies from `requirements.txt`
 | Python | 3.10 or newer |
 | Node.js | 18 or newer |
 | npm | Included with Node.js |
+| PostgreSQL | 12 or newer |
 
 The model files should exist at:
 
@@ -52,15 +61,48 @@ models/
   tokenizer/
 ```
 
+## Database Setup
+
+Before running the app, set up PostgreSQL and Prisma:
+
+```bash
+# 1. Create .env.local with your database URL
+cp .env.example .env.local
+
+# 2. Update DATABASE_URL in .env.local
+# DATABASE_URL="postgresql://user:password@localhost:5432/bandgap_ml"
+
+# 3. Install dependencies
+npm install
+
+# 4. Run Prisma migrations
+npx prisma migrate dev
+
+# 5. (Optional) View database in browser
+npx prisma studio
+```
+
+For detailed setup instructions, see [DATABASE_SETUP.md](DATABASE_SETUP.md)
+
 ## Environment Variables
 
-Create or update `.env` in the project root:
+Create or update `.env.local` in the project root:
 
 ```env
+# Database
+DATABASE_URL=postgresql://user:password@localhost:5432/bandgap_ml
+
+# NextAuth
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-super-secret-random-string-here
+
+# Google OAuth
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
-NEXTAUTH_SECRET=your_random_secret
-NEXTAUTH_URL=http://localhost:3000
+
+# GitHub OAuth (optional, for future use)
+GITHUB_CLIENT_ID=your_github_client_id
+GITHUB_CLIENT_SECRET=your_github_client_secret
 ```
 
 For Google OAuth, add this redirect URI in Google Cloud Console:
@@ -78,6 +120,33 @@ Optional backend variables:
 | `MODEL_DEVICE` | auto | Force `cpu`, `cuda`, etc. |
 | `LOG_LEVEL` | `INFO` | Backend logging level |
 | `CORS_ORIGINS` | set by `start-app.bat` | Allowed frontend origins |
+
+## Architecture
+
+### Authentication
+- **Provider:** NextAuth.js with Google OAuth
+- **Session Strategy:** JWT (JSON Web Tokens)
+- **Database Integration:** Prisma ORM
+- **Security:** HTTPS, secure cookies, CSRF protection
+
+### Database
+- **System:** PostgreSQL
+- **ORM:** Prisma for type-safe database access
+- **Models:** Users, PredictionHistory, SharedPredictions
+- **Migrations:** Version-controlled with Prisma Migrate
+
+### Frontend
+- **Framework:** Next.js 15 with App Router
+- **Styling:** Tailwind CSS
+- **Components:** Radix UI, custom components
+- **State:** React hooks, NextAuth sessions
+
+### Backend
+- **API:** FastAPI with CORS support
+- **Model:** Fine-tuned DistilRoBERTa
+- **Inference:** PyTorch
+- **Integration:** JSON API with frontend
+
 
 ## Manual Backend Start
 

@@ -1,1 +1,8 @@
-@import "../styles/index.css";
+@import "tailwindcss";
+@source "../app";
+@source "../components";
+@source "../lib";
+@source "../services";
+@source "../types";
+@import "tw-animate-css";
+@import "../styles/theme.css";

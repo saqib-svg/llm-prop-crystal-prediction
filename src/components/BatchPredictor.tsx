@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
+import { batchPredictBandGap } from '@/services/prediction/predictionService';
 
 /* ─── Types ─────────────────────────────────────────────────────────────── */
 
@@ -57,7 +58,7 @@ function exportCsv(rows: ResultRow[]): void {
 
 /* ─── Component ──────────────────────────────────────────────────────────── */
 
-const BATCH_SIZE = 10; // texts per /batch-predict request
+const BATCH_SIZE = 10;
 
 export function BatchPredictor() {
     const [texts, setTexts] = useState<string[]>([]);
@@ -118,18 +119,9 @@ export function BatchPredictor() {
             const offset = ci * BATCH_SIZE;
 
             try {
-                const res = await fetch('/batch-predict', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ texts: chunk }),
-                });
+                const results = await batchPredictBandGap(chunk);
 
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const data = await res.json() as {
-                    results: { index: number; prediction?: number; error?: string }[];
-                };
-
-                for (const item of data.results) {
+                for (const item of results) {
                     allResults.push({
                         index: offset + item.index,
                         text: chunk[item.index],
@@ -171,7 +163,7 @@ export function BatchPredictor() {
                 <h1 className="text-2xl font-semibold tracking-tight">Batch Inference</h1>
                 <p className="text-sm text-muted-foreground">
                     Upload a CSV / TXT file (one material description per line). The backend runs all
-                    predictions via <code className="text-xs bg-muted px-1 py-0.5 rounded">/batch-predict</code> and results are downloadable.
+                    predictions via the unified prediction API and results are downloadable.
                 </p>
             </div>
 

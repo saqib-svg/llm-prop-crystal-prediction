@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { signIn } from "next-auth/react";
-import { ArrowLeft, Atom, Lock, Mail, User } from "lucide-react";
+import { ArrowLeft, Atom, Github, Lock, Mail, User } from "lucide-react";
+
+import { signInWithProvider } from "@/services/auth/authService";
 
 type AuthPageProps = {
   mode: "login" | "signup";
@@ -18,7 +19,7 @@ export function AuthPage({ mode }: AuthPageProps) {
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    void signIn("google", { callbackUrl: "/" });
+    void signInWithProvider("google");
   }
 
   return (
@@ -131,6 +132,19 @@ export function AuthPage({ mode }: AuthPageProps) {
               >
                 {isSignup ? "Create workspace" : "Sign in with Google"}
               </button>
+
+              {!isSignup && (
+                <button
+                  type="button"
+                  onClick={() => void signInWithProvider("github")}
+                  className="mt-4 w-full rounded-3xl border border-white/10 bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:border-yellow-500/40 hover:bg-slate-800"
+                >
+                  <span className="inline-flex items-center justify-center gap-2">
+                    <Github className="size-4" />
+                    Sign in with GitHub
+                  </span>
+                </button>
+              )}
             </form>
 
             <p className="mt-6 text-center text-sm text-slate-500">
