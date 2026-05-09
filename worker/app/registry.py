@@ -24,6 +24,7 @@ class ModelRegistry:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
         self._services: dict[str, BaseModelService] = {}
+        self._failures: dict[str, str] = {}
 
     def names(self) -> list[str]:
         return sorted(MODEL_REGISTRY)
@@ -32,17 +33,25 @@ class ModelRegistry:
         key = name.strip().lower()
         if key not in MODEL_REGISTRY:
             raise ModelNotFoundError(f"Unknown model: {name}")
+        if key in self._failures:
+            raise RuntimeError(f"Model {key} failed to load: {self._failures[key]}")
         if key not in self._services:
             self._services[key] = MODEL_REGISTRY[key](self.settings)
         return self._services[key]
 
     def load_all(self) -> None:
         for name in MODEL_REGISTRY:
-            self.get(name).load()
+            try:
+                self.get(name).load()
+            except Exception as exc:
+                self._failures[name] = str(exc)
 
     def status(self) -> dict[str, dict]:
         statuses = {}
         for name in MODEL_REGISTRY:
             service = self._services.get(name)
             statuses[name] = service.status() if service else {"name": name, "ready": False}
+            if name in self._failures:
+                statuses[name]["ready"] = False
+                statuses[name]["error"] = self._failures[name]
         return statuses

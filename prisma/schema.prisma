@@ -32,6 +32,7 @@ model PredictionHistory {
   createdAt DateTime  @default(now())
 
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sharedPredictions SharedPrediction[]
 
   @@index([userId])
   @@index([createdAt])
@@ -47,6 +48,7 @@ model SharedPrediction {
 
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId          String
+  prediction      PredictionHistory @relation(fields: [predictionId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([shareToken])

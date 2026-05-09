@@ -37,3 +37,13 @@ export async function apiPost<TResponse, TBody>(path: string, body: TBody): Prom
   });
   return parseJson<TResponse>(response);
 }
+
+export async function apiDelete<T>(path: string): Promise<T> {
+  const response = await fetch(path, {
+    method: "DELETE",
+    headers: {
+      Accept: "application/json",
+    },
+  });
+  return parseJson<T>(response);
+}

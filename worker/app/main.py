@@ -20,6 +20,7 @@ async def lifespan(app: FastAPI):
     logger.info("Starting model worker version=%s", settings.api_version)
     registry = ModelRegistry(settings)
     registry.load_all()
+    logger.info("Model status %s", registry.status())
     app.state.registry = registry
     try:
         yield

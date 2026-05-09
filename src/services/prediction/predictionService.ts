@@ -13,6 +13,9 @@ export async function predictBandGap(text: string): Promise<BandGapPrediction> {
   return {
     prediction: payload.output.band_gap_ev,
     unit: "eV",
+    id: payload.predictionId,
+    confidence: payload.output.confidence,
+    model: "bandgap",
   };
 }
 
