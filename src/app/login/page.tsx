@@ -1,5 +1,10 @@
 import { AuthPage } from "../../components/AuthPage";
 
-export default function LoginPage() {
-    return <AuthPage mode="login" />;
+type LoginPageProps = {
+    searchParams: Promise<{ error?: string }>;
+};
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+    const params = await searchParams;
+    return <AuthPage mode="login" error={params.error} />;
 }

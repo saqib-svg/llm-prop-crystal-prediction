@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException, Request
 from worker.app.api.routes import bandgap, conductivity, density, health, stability
 from worker.app.api.schemas import PredictRequest, PredictResponse
 from worker.app.core.exceptions import ModelNotFoundError
-from worker.app.registry import ModelRegistry
+from worker.app.core.exceptions import ModelNotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -21,23 +21,21 @@ router.include_router(stability.router)
 
 @router.post("/predict", response_model=PredictResponse)
 def predict(request: Request, payload: PredictRequest) -> PredictResponse:
-    registry: ModelRegistry = request.app.state.registry
+    orchestrator = request.app.state.orchestrator
 
     try:
-        service = registry.get(payload.model)
-        result = service.predict(payload.input)
-    except ModelNotFoundError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
+        # Use new model name mapping if it came from legacy
+        target_model = "band_gap" if payload.model == "bandgap" else payload.model
+        result = orchestrator.predict(input_data=payload.input, predictors=[target_model])
     except ValueError as exc:
+        if "Unknown predictor" in str(exc):
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
         logger.exception("Unified prediction failed model=%s", payload.model)
         raise HTTPException(status_code=500, detail="Prediction failed.") from exc
 
     return PredictResponse(
-        model=result.model,
-        band_gap=result.value if result.model == "bandgap" else None,
-        value=result.value,
-        unit=result.unit,
+        properties=result.properties,
         metadata=result.metadata,
     )

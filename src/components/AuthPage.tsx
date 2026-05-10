@@ -8,9 +8,10 @@ import { signInWithProvider } from "@/services/auth/authService";
 
 type AuthPageProps = {
   mode: "login" | "signup";
+  error?: string;
 };
 
-export function AuthPage({ mode }: AuthPageProps) {
+export function AuthPage({ mode, error: authError }: AuthPageProps) {
   const isSignup = mode === "signup";
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -53,6 +54,14 @@ export function AuthPage({ mode }: AuthPageProps) {
             </div>
 
             <form onSubmit={handleSubmit} className="mt-10 space-y-5">
+              {authError ? (
+                <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                  {authError === "AccessDenied"
+                    ? "Sign-in was denied. Make sure your provider account has a public email and the database is available."
+                    : "Sign-in failed. Please try again."}
+                </div>
+              ) : null}
+
               {isSignup && (
                 <div className="space-y-2 rounded-3xl border border-white/10 bg-white/5 px-4 py-4">
                   <label className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">

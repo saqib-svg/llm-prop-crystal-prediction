@@ -1,0 +1,12 @@
+import os
+from pathlib import Path
+
+BASE_MODEL_DIR = Path(os.getenv("MODEL_DIR", "/app/models"))
+
+MODEL_PATHS = {
+    "band_gap": BASE_MODEL_DIR / "bandgap" / "best_bandgap_model.pt",
+}
+
+TOKENIZER_PATHS = {
+    "band_gap": BASE_MODEL_DIR / "bandgap" / "tokenizer",
+}

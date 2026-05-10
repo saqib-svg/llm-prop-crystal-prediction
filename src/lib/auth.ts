@@ -26,6 +26,15 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: "/login",
+    error: "/login",
+  },
+  logger: {
+    error(code, metadata) {
+      if (code === "JWT_SESSION_ERROR") {
+        return;
+      }
+      console.error(`[next-auth][${code}]`, metadata);
+    },
   },
   callbacks: {
     async signIn({ user }) {
@@ -56,14 +65,21 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
     async session({ session, token }) {
-      if (session?.user && token?.sub) {
-        session.user.id = token.sub;
+      if (session?.user && typeof token.userId === "string") {
+        session.user.id = token.userId;
       }
       return session;
     },
-    async jwt({ token, user }) {
-      if (user) {
-        token.sub = user.id;
+    async jwt({ token }) {
+      const email = token.email?.trim().toLowerCase();
+      if (email) {
+        const dbUser = await prisma.user.findUnique({
+          where: { email },
+          select: { id: true },
+        });
+        if (dbUser) {
+          token.userId = dbUser.id;
+        }
       }
       return token;
     },

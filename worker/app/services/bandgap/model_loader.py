@@ -9,7 +9,6 @@ import torch
 import torch.nn as nn
 from transformers import AutoConfig, AutoModel
 
-from worker.app.core.config import ModelConfig
 from worker.app.services.bandgap.tokenizer import load_tokenizer
 
 logger = logging.getLogger(__name__)
@@ -56,9 +55,12 @@ class BandGapModel(nn.Module):
         return pred.squeeze(-1)
 
 
-def load_model_bundle(config: ModelConfig, device: str | None = None) -> ModelBundle:
-    model_file = config.model_path
-    tokenizer_dir = config.tokenizer_dir
+def load_model_bundle(
+    model_file: Path,
+    tokenizer_dir: Path | None,
+    max_length: int = 256,
+    device: str | None = None
+) -> ModelBundle:
 
     if not model_file.exists():
         raise FileNotFoundError(f"Model weights not found: {model_file}")
@@ -90,12 +92,12 @@ def load_model_bundle(config: ModelConfig, device: str | None = None) -> ModelBu
     model.to(resolved_device)
     model.eval()
 
-    max_length = min(int(getattr(tokenizer, "model_max_length", config.max_length) or config.max_length), config.max_length)
-    logger.info("Bandgap model ready device=%s max_length=%s", resolved_device, max_length)
+    max_length_val = min(int(getattr(tokenizer, "model_max_length", max_length) or max_length), max_length)
+    logger.info("Bandgap model ready device=%s max_length=%s", resolved_device, max_length_val)
 
     return ModelBundle(
         model=model,
         tokenizer=tokenizer,
         device=resolved_device,
-        max_length=max_length,
+        max_length=max_length_val,
     )

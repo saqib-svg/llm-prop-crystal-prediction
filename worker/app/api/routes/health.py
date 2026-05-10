@@ -11,7 +11,9 @@ router = APIRouter(tags=["health"])
 @router.get("/health", response_model=HealthResponse)
 def health(request: Request) -> HealthResponse:
     registry: ModelRegistry = request.app.state.registry
-    return HealthResponse(status="ok", models=registry.status())
+    models = registry.status()
+    status = "ok" if all(model.get("ready") for model in models.values()) else "degraded"
+    return HealthResponse(status=status, models=models)
 
 
 @router.get("/models/status")

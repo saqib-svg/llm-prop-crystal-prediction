@@ -19,31 +19,32 @@ router = APIRouter(tags=["bandgap"])
 
 @router.post("/predict-bandgap", response_model=BandGapResponse)
 def predict_bandgap(request: Request, payload: BandGapRequest) -> BandGapResponse:
-    registry: ModelRegistry = request.app.state.registry
-    service = registry.get("bandgap")
+    orchestrator = request.app.state.orchestrator
 
     try:
-        result = service.predict(payload.text)
+        result = orchestrator.predict(input_data=payload.text, predictors=["band_gap"])
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
         logger.exception("Bandgap prediction failed")
         raise HTTPException(status_code=500, detail="Prediction failed.") from exc
 
-    return BandGapResponse(prediction=result.value, unit=result.unit, metadata=result.metadata)
-
+    return BandGapResponse(
+        properties=result.properties,
+        metadata=result.metadata
+    )
 
 @router.post("/batch-predict", response_model=BatchBandGapResponse)
 def batch_predict(request: Request, payload: BatchBandGapRequest) -> BatchBandGapResponse:
-    registry: ModelRegistry = request.app.state.registry
-    service = registry.get("bandgap")
+    orchestrator = request.app.state.orchestrator
     results: list[BatchBandGapItem] = []
     succeeded = 0
     failed = 0
 
     for index, text in enumerate(payload.texts):
         try:
-            prediction = service.predict(text).value
+            result = orchestrator.predict(input_data=text, predictors=["band_gap"])
+            prediction = result.properties["band_gap"].value
             results.append(BatchBandGapItem(index=index, text=text, prediction=prediction))
             succeeded += 1
         except Exception as exc:

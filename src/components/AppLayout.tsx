@@ -54,6 +54,26 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 </Button>
               </Link>
               {displayName ? (
+                <>
+                  <Link href="/dashboard">
+                    <Button
+                      variant={pathname === '/dashboard' ? 'secondary' : 'ghost'}
+                      size="sm"
+                    >
+                      Dashboard
+                    </Button>
+                  </Link>
+                  <Link href="/history">
+                    <Button
+                      variant={pathname === '/history' ? 'secondary' : 'ghost'}
+                      size="sm"
+                    >
+                      History
+                    </Button>
+                  </Link>
+                </>
+              ) : null}
+              {displayName ? (
                 <div className="hidden max-w-60 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-slate-300 md:flex">
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-yellow-500 text-xs font-semibold text-black">
                     {userInitial}
