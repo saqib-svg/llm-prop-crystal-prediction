@@ -6,8 +6,7 @@ from fastapi import APIRouter, HTTPException, Request
 
 from worker.app.api.routes import bandgap, conductivity, density, health, stability
 from worker.app.api.schemas import PredictRequest, PredictResponse
-from worker.app.core.exceptions import ModelNotFoundError
-from worker.app.core.exceptions import ModelNotFoundError
+from worker.app.core.exceptions import ModelNotFoundError, PredictorValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +29,8 @@ def predict(request: Request, payload: PredictRequest) -> PredictResponse:
     except ValueError as exc:
         if "Unknown predictor" in str(exc):
             raise HTTPException(status_code=404, detail=str(exc)) from exc
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except PredictorValidationError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
         logger.exception("Unified prediction failed model=%s", payload.model)

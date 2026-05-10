@@ -10,29 +10,25 @@ Predict the band gap (eV) of crystalline materials from plain-text descriptions 
 
 ```text
 .
-|-- data/                 Dataset CSV files
-|-- inference/            Prediction notebook
-|-- models/               Trained model and tokenizer files
-|-- preprocessing/        Data conversion helpers
-|-- prisma/               Prisma schema and migrations
-|-- server/               FastAPI backend
-|-- src/app/              Next.js App Router frontend
-|   |-- api/auth/         NextAuth.js Google auth route
-|   |-- layout.tsx        Root layout with session provider
-|   |-- page.tsx          Homepage
-|   `-- providers.tsx     NextAuth SessionProvider
-|-- src/lib/              Shared utilities and configuration
-|   |-- auth.ts           NextAuth configuration with JWT strategy
-|   |-- prisma.ts         Prisma client singleton
-|   |-- predictions.ts    Prediction API functions
-|   `-- users.ts          User database functions
-|-- training/             Model training script
-|-- requirements.txt      Python backend dependencies
-|-- package.json          Node/Next.js dependencies and scripts
-|-- DATABASE_SETUP.md     Database setup instructions
-|-- MIGRATION.md          Migration guide from Supabase
-`-- start-app.bat         Windows one-click launcher
+|-- docker-compose.yml     Docker Compose configuration for worker and database
+|-- next.config.mjs        Next.js configuration
+|-- package.json           Node/Next.js dependencies and scripts
+|-- postcss.config.mjs     Tailwind/PostCSS config
+|-- prisma/                Prisma schema and migrations
+|-- src/                   Next.js App Router frontend
+|   |-- app/               Application pages and API routes
+|   |-- components/        React UI components
+|   |-- lib/               Frontend utilities and services
+|   |-- styles/            CSS and shared types
+|-- worker/                Python model worker service
+|   |-- app/               FastAPI app, core logic, and services
+|   |-- models/            Saved model weights and tokenizer files
+|-- tests/                 Project tests and integration checks
 ```
+
+## Note
+
+This repository includes a separate Python worker service under `worker/` that serves model inference and health endpoints. The frontend proxy route at `src/app/api/predict/route.ts` forwards requests to the worker API and preserves backend metadata for prediction responses.
 
 ## Quick Start on Windows
 

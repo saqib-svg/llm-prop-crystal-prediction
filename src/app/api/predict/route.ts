@@ -82,12 +82,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid band_gap value from FastAPI." }, { status: 500 });
     }
 
+    const confidence = typeof (data as any).properties?.band_gap?.confidence === "number"
+      ? (data as any).properties.band_gap.confidence
+      : typeof (data as any).confidence === "number"
+      ? (data as any).confidence
+      : null;
+
+    const metadata = typeof (data as any).metadata === "object" && (data as any).metadata !== null
+      ? (data as any).metadata
+      : undefined;
+
     const output = {
       label,
       band_gap_ev: bandGap,
-      confidence: 0.82,
+      confidence,
       source: "fastapi",
       properties: (data as any).properties,
+      ...(metadata ? { metadata } : {}),
     } as const;
 
     let predictionId: string | null = null;

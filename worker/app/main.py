@@ -26,8 +26,8 @@ async def lifespan(app: FastAPI):
     app.state.registry = registry
 
     orchestrator = PredictionOrchestrator(PREDICTOR_REGISTRY)
-    # Lazy loading is supported, so we optionally call load_all()
-    # orchestrator.load_all()
+    # Lazy loading is supported, but also load predictors at startup for health monitoring.
+    orchestrator.load_all()
     app.state.orchestrator = orchestrator
     try:
         yield

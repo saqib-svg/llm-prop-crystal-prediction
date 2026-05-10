@@ -12,7 +12,7 @@ ServiceFactory = Callable[[Settings], BaseModelService]
 
 
 def _bandgap_factory(settings: Settings) -> BaseModelService:
-    return BandGapService(settings.bandgap, settings.device)
+    return BandGapService(settings.device)
 
 
 MODEL_REGISTRY: dict[str, ServiceFactory] = {
