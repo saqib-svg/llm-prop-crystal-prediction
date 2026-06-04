@@ -141,7 +141,11 @@ export function BandGapPredictor() {
 
       toast.success("Prediction complete.");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Prediction failed.";
+      const message = error instanceof Error
+        ? error.message
+        : error && typeof error === "object" && "message" in error
+        ? String((error as { message?: string }).message)
+        : String(error) || "Prediction failed.";
       setErrorMessage(message);
       toast.error(message);
     } finally {
@@ -153,9 +157,9 @@ export function BandGapPredictor() {
     <main className="w-full px-4 py-6 md:px-6 lg:px-8">
       <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
         <aside className="xl:sticky xl:top-24 xl:self-start">
-          <Card className="border-white/10 bg-white/5 p-4 shadow-xl backdrop-blur-xl md:p-5">
+          <Card className="border-border bg-card p-4 shadow-xl backdrop-blur-xl md:p-5">
             <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-slate-200">
+              <div className="flex items-center gap-2 text-foreground">
                 <History className="size-4" />
                 <h2 className="font-semibold tracking-wide">Recent predictions</h2>
               </div>
@@ -190,20 +194,20 @@ export function BandGapPredictor() {
                       });
                       setErrorMessage(null);
                     }}
-                    className="group w-full rounded-lg border border-white/10 bg-white/5 px-3 py-3 text-left transition hover:border-yellow-500/50 hover:bg-white/10"
+                    className="group w-full rounded-lg border border-border bg-card px-3 py-3 text-left transition hover:border-yellow-500/50 hover:bg-accent"
                   >
-                    <p className="line-clamp-3 text-xs leading-5 text-slate-400">{entry.input_text}</p>
+                    <p className="line-clamp-3 text-xs leading-5 text-muted-foreground">{entry.input_text}</p>
                     <div className="mt-3 flex items-center justify-between gap-3">
-                      <span className="text-xs text-slate-500">{new Date(entry.created_at).toLocaleDateString()}</span>
-                      <span className="shrink-0 text-xs font-medium tabular-nums text-slate-200">
+                      <span className="text-xs text-muted-foreground">{new Date(entry.created_at).toLocaleDateString()}</span>
+                      <span className="shrink-0 text-xs font-medium tabular-nums text-foreground">
                         {getValue(entry).toFixed(4)} eV
                       </span>
                     </div>
                   </button>
                 ))
               ) : (
-                <div className="rounded-lg border border-dashed border-white/10 bg-white/5 px-4 py-8 text-center">
-                  <p className="text-sm text-slate-500">
+                <div className="rounded-lg border border-dashed border-border bg-card px-4 py-8 text-center">
+                  <p className="text-sm text-muted-foreground">
                     {userEmail ? "Saved predictions will appear here." : "Login to save prediction history."}
                   </p>
                 </div>
@@ -213,7 +217,7 @@ export function BandGapPredictor() {
         </aside>
 
         <section className="min-w-0 space-y-6">
-          <Card className="border-white/10 bg-white/5 p-6 shadow-xl backdrop-blur-xl md:p-8">
+          <Card className="border-border bg-card p-6 shadow-xl backdrop-blur-xl md:p-8">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
               <div className="space-y-3">
                 <Badge variant="secondary" className="w-fit gap-1.5 bg-yellow-500/10 text-yellow-500">
@@ -221,10 +225,10 @@ export function BandGapPredictor() {
                   AI Materials Platform
                 </Badge>
                 <div>
-                  <h1 className="text-3xl font-bold tracking-tight text-white md:text-5xl">
+                  <h1 className="text-3xl font-bold tracking-tight text-foreground md:text-5xl">
                     Materials property prediction
                   </h1>
-                  <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400 md:text-base">
+                  <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground md:text-base">
                     Predict band gap from natural-language crystal and coordination descriptions.
                   </p>
                 </div>
@@ -238,11 +242,11 @@ export function BandGapPredictor() {
           </Card>
 
           <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_360px]">
-            <Card className="border-white/10 bg-white/5 p-6 shadow-xl backdrop-blur-xl">
+            <Card className="border-border bg-card p-6 shadow-xl backdrop-blur-xl">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h2 className="text-lg font-semibold text-white">Material input</h2>
-                  <p className="mt-1 text-sm text-slate-400">
+                  <h2 className="text-lg font-semibold text-foreground">Material input</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
                     Include composition, space group, local coordination, and useful structural context.
                   </p>
                 </div>
@@ -256,11 +260,11 @@ export function BandGapPredictor() {
                 value={text}
                 onChange={(event) => setText(event.target.value.slice(0, MAX_INPUT_LENGTH))}
                 placeholder="Example: ZnO crystallizes in the hexagonal P6_3mc space group and forms corner-sharing ZnO4 tetrahedra."
-                className="mt-4 h-[340px] overflow-y-auto rounded-lg border-white/10 bg-black/40 p-4 font-mono text-sm text-slate-200 placeholder:text-slate-600 focus-visible:border-yellow-500/50 focus-visible:ring-yellow-500/50"
+                className="mt-4 h-[340px] overflow-y-auto rounded-lg border-border bg-muted p-4 font-mono text-sm text-foreground placeholder:text-muted-foreground focus-visible:border-yellow-500/50 focus-visible:ring-yellow-500/50"
               />
 
               <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="text-xs text-slate-500">{text.length} / {MAX_INPUT_LENGTH} characters</div>
+                <div className="text-xs text-muted-foreground">{text.length} / {MAX_INPUT_LENGTH} characters</div>
                 <Button
                   onClick={handlePredict}
                   disabled={loading || isGuestLimitReached}
@@ -272,9 +276,9 @@ export function BandGapPredictor() {
               </div>
 
               {isGuestLimitReached ? (
-                <div className="mt-4 rounded-lg border border-yellow-500/30 bg-slate-950/80 p-4 text-sm text-slate-200">
-                  <div className="font-semibold text-white">Free limit reached</div>
-                  <p className="mt-1 text-slate-400">Login to continue with unlimited predictions and saved history.</p>
+                <div className="mt-4 rounded-lg border border-yellow-500/30 bg-slate-950/80 p-4 text-sm text-foreground">
+                  <div className="font-semibold text-foreground">Free limit reached</div>
+                  <p className="mt-1 text-muted-foreground">Login to continue with unlimited predictions and saved history.</p>
                   <Button className="mt-3 bg-yellow-500 text-black hover:bg-yellow-400" onClick={() => router.push("/login")}>
                     Continue
                   </Button>
@@ -289,8 +293,8 @@ export function BandGapPredictor() {
               ) : null}
             </Card>
 
-            <Card className="border-white/10 bg-white/5 p-6 shadow-xl backdrop-blur-xl">
-              <h2 className="text-lg font-semibold text-white">Examples</h2>
+            <Card className="border-border bg-card p-6 shadow-xl backdrop-blur-xl">
+              <h2 className="text-lg font-semibold text-foreground">Examples</h2>
               <div className="mt-4 space-y-3">
                 {EXAMPLES.map((example) => (
                   <button
@@ -302,10 +306,10 @@ export function BandGapPredictor() {
                       setErrorMessage(null);
                       toast.info(`Loaded ${example.name}`);
                     }}
-                    className="w-full rounded-lg border border-white/10 bg-white/5 p-4 text-left transition hover:border-yellow-500/50 hover:bg-white/10"
+                    className="w-full rounded-lg border border-border bg-card p-4 text-left transition hover:border-yellow-500/50 hover:bg-accent"
                   >
-                    <div className="text-sm font-medium text-slate-200">{example.name}</div>
-                    <p className="mt-1 line-clamp-3 text-xs leading-5 text-slate-500">{example.text}</p>
+                    <div className="text-sm font-medium text-foreground">{example.name}</div>
+                    <p className="mt-1 line-clamp-3 text-xs leading-5 text-muted-foreground">{example.text}</p>
                   </button>
                 ))}
               </div>
@@ -313,30 +317,26 @@ export function BandGapPredictor() {
           </div>
 
           {activePrediction ? (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {Object.entries(
+            <PredictionResultCard
+              predictionId={activePrediction.id}
+              materialInput={activePrediction.materialInput}
+              timestamp={activePrediction.timestamp}
+              saved={Boolean(activePrediction.id)}
+              properties={
                 activePrediction.properties ?? {
                   band_gap: {
                     value: activePrediction.value,
                     unit: activePrediction.unit,
                     confidence: activePrediction.confidence,
                   },
+                  formation_energy: { value: 0, unit: "eV/atom", confidence: 0.8 },
+                  volume: { value: 0, unit: "Å³", confidence: 0.9 },
+                  density: { value: 0, unit: "g/cm³", confidence: 0.95 },
+                  crystal_system: { value: "Unknown" },
+                  bandgap_classifier: { value: "Pending" },
                 }
-              ).map(([propertyKey, propData]) => (
-                <PredictionResultCard
-                  key={propertyKey}
-                  predictionId={activePrediction.id}
-                  materialInput={activePrediction.materialInput}
-                  value={Number(propData.value)}
-                  unit={propData.unit ?? "eV"}
-                  confidence={propData.confidence}
-                  model="bandgap"
-                  propertyKey={propertyKey}
-                  timestamp={activePrediction.timestamp}
-                  saved={Boolean(activePrediction.id)}
-                />
-              ))}
-            </div>
+              }
+            />
           ) : null}
         </section>
       </div>

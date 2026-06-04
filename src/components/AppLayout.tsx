@@ -45,64 +45,29 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   About
                 </Button>
               </Link>
-              <Link href="/batch">
-                <Button
-                  variant={pathname === '/batch' ? 'secondary' : 'ghost'}
-                  size="sm"
-                >
-                  Batch
-                </Button>
-              </Link>
+
               {displayName ? (
-                <>
-                  <Link href="/dashboard">
-                    <Button
-                      variant={pathname === '/dashboard' ? 'secondary' : 'ghost'}
-                      size="sm"
-                    >
-                      Dashboard
-                    </Button>
-                  </Link>
-                  <Link href="/history">
-                    <Button
-                      variant={pathname === '/history' ? 'secondary' : 'ghost'}
-                      size="sm"
-                    >
-                      History
-                    </Button>
-                  </Link>
-                </>
-              ) : null}
-              {displayName ? (
-                <div className="hidden max-w-60 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-slate-300 md:flex">
+                <div className="hidden max-w-60 items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-sm text-muted-foreground md:flex animate-in fade-in duration-300">
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-yellow-500 text-xs font-semibold text-black">
                     {userInitial}
                   </div>
                   <span className="truncate">{displayName}</span>
                 </div>
+              ) : isAuthLoading ? (
+                <div className="hidden md:flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted animate-pulse" />
+                  <div className="h-4 w-20 rounded bg-muted animate-pulse" />
+                </div>
               ) : (
-                <>
                   <Button
                     size="sm"
                     className="bg-yellow-500 text-black hover:bg-yellow-400"
-                    disabled={isAuthLoading}
                     onClick={() => {
                       router.push('/login');
                     }}
                   >
-                    Login
+                    Sign In / Sign Up
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={isAuthLoading}
-                    onClick={() => {
-                      router.push('/signup');
-                    }}
-                  >
-                    Create Account
-                  </Button>
-                </>
               )}
               <div className="ml-2">
                 <SettingsMenu />

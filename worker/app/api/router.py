@@ -24,8 +24,11 @@ def predict(request: Request, payload: PredictRequest) -> PredictResponse:
 
     try:
         # Use new model name mapping if it came from legacy
-        target_model = "band_gap" if payload.model == "bandgap" else payload.model
-        result = orchestrator.predict(input_data=payload.input, predictors=[target_model])
+        if payload.model == "bandgap":
+            predictor_names = list(orchestrator.registry.keys())
+        else:
+            predictor_names = [payload.model]
+        result = orchestrator.predict(input_data=payload.input, predictors=predictor_names)
     except ValueError as exc:
         if "Unknown predictor" in str(exc):
             raise HTTPException(status_code=404, detail=str(exc)) from exc

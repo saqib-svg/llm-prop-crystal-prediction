@@ -6,19 +6,19 @@ import { SharePredictionButton } from "@/components/SharePredictionButton";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { getPropertyLabel } from "@/lib/properties";
-import type { ModelName } from "@/types/prediction";
+
+type PredictionProperties = Record<
+  string,
+  { value: number | string; unit?: string; confidence?: number }
+>;
 
 type PredictionResultCardProps = {
   predictionId?: string | null;
   materialInput: string;
-  value: number;
-  unit?: string;
-  confidence?: number;
-  model?: ModelName | string;
   timestamp?: Date | string;
   explanation?: string;
   saved?: boolean;
-  propertyKey?: string;
+  properties: PredictionProperties;
 };
 
 function category(value: number) {
@@ -31,67 +31,82 @@ function category(value: number) {
 export function PredictionResultCard({
   predictionId,
   materialInput,
-  value,
-  unit = "eV",
-  confidence,
-  model = "bandgap",
   timestamp = new Date(),
   explanation,
   saved = Boolean(predictionId),
-  propertyKey,
+  properties,
 }: PredictionResultCardProps) {
   const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
-  
-  const displayLabel = propertyKey 
-    ? getPropertyLabel(propertyKey).toUpperCase() 
-    : String(model).toUpperCase();
 
   return (
-    <Card className="border-white/10 bg-white/5 p-6 shadow-xl backdrop-blur-xl">
-      <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
-        <div className="min-w-0 space-y-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="secondary" className="gap-1.5">
-              <Sparkles className="size-3.5" />
-              {displayLabel}
-            </Badge>
-            <Badge variant="outline">{category(value)}</Badge>
-            <Badge variant={saved ? "secondary" : "outline"} className="gap-1.5">
-              <Database className="size-3.5" />
-              {saved ? "Saved" : "Unsaved"}
-            </Badge>
-          </div>
-
-          <div>
-            <div className="flex items-baseline gap-2">
-              <span className="tabular-nums text-5xl font-semibold tracking-tight text-white">
-                {value.toFixed(4)}
-              </span>
-              <span className="text-xl text-slate-400">{unit}</span>
-            </div>
-            {typeof confidence === "number" ? (
-              <p className="mt-2 text-sm text-slate-400">
-                Confidence {(confidence * 100).toFixed(0)}%
-              </p>
-            ) : null}
-          </div>
-
-          <p className="line-clamp-4 max-w-3xl text-sm leading-6 text-slate-300">{materialInput}</p>
-
-          {explanation ? (
-            <p className="rounded-lg border border-white/10 bg-black/20 p-3 text-sm text-slate-300">
-              {explanation}
-            </p>
-          ) : null}
-
-          <div className="flex items-center gap-2 text-xs text-slate-500">
+    <Card className="border-border bg-card p-6 shadow-xl backdrop-blur-xl">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Badge
+            variant={saved ? "secondary" : "outline"}
+            className="gap-1.5 bg-muted text-foreground hover:bg-accent border-0"
+          >
+            <Database className="size-3.5" />
+            {saved ? "Saved" : "Unsaved"}
+          </Badge>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Clock className="size-3.5" />
             {date.toLocaleString()}
           </div>
         </div>
-
         <SharePredictionButton predictionId={predictionId} title={materialInput.slice(0, 80)} />
       </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {Object.entries(properties).map(([key, data]) => {
+          const displayLabel = getPropertyLabel(key).toUpperCase();
+          const displayValue = typeof data.value === "number" ? data.value.toFixed(4) : data.value;
+          const categoryText =
+            key === "band_gap" && typeof data.value === "number" ? category(data.value) : undefined;
+
+          return (
+            <div key={key} className="flex flex-col border border-white/5 bg-card p-5 rounded-xl min-h-[140px]">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-1.5 text-[10px] font-bold tracking-wider text-yellow-500 uppercase">
+                  <Sparkles className="size-3.5" />
+                  {displayLabel}
+                </div>
+                {categoryText ? (
+                  <Badge
+                    variant="outline"
+                    className="text-yellow-500 border-yellow-500/30 bg-transparent text-[10px] py-1 px-3 rounded-full font-medium"
+                  >
+                    {categoryText}
+                  </Badge>
+                ) : null}
+              </div>
+
+              <div className="mt-auto pt-6">
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-3xl font-bold tracking-tight text-foreground">
+                    {displayValue}
+                  </span>
+                  {data.unit ? (
+                    <span className="text-sm font-medium text-muted-foreground">{data.unit}</span>
+                  ) : null}
+                </div>
+
+                {typeof data.confidence === "number" ? (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Confidence {(data.confidence * 100).toFixed(0)}%
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {explanation ? (
+        <p className="mt-6 rounded-lg border border-border bg-muted p-4 text-sm text-muted-foreground">
+          {explanation}
+        </p>
+      ) : null}
     </Card>
   );
 }

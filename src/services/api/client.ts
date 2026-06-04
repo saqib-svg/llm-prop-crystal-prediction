@@ -27,15 +27,24 @@ export async function apiGet<T>(path: string): Promise<T> {
 }
 
 export async function apiPost<TResponse, TBody>(path: string, body: TBody): Promise<TResponse> {
-  const response = await fetch(path, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify(body),
-  });
-  return parseJson<TResponse>(response);
+  try {
+    const response = await fetch(path, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+    return parseJson<TResponse>(response);
+  } catch (error) {
+    const message = error instanceof Error
+      ? error.message
+      : error && typeof error === "object" && "message" in error
+      ? String((error as { message?: string }).message)
+      : String(error);
+    throw new Error(message || "Network request failed.");
+  }
 }
 
 export async function apiDelete<T>(path: string): Promise<T> {

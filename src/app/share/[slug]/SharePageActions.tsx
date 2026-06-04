@@ -45,12 +45,6 @@ export function SharePageActions({ slug, canDelete }: SharePageActionsProps) {
         {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
         Copy link
       </Button>
-      {canDelete ? (
-        <Button type="button" variant="destructive" onClick={remove} disabled={deleting}>
-          {deleting ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
-          Delete share
-        </Button>
-      ) : null}
     </div>
   );
 }

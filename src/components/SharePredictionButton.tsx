@@ -31,8 +31,8 @@ export function SharePredictionButton({
 
     setLoading(true);
     try {
-      const share = await createShare({ predictionId, title });
-      await navigator.clipboard.writeText(share.url);
+      const url = `${window.location.origin}/share/${predictionId}`;
+      await navigator.clipboard.writeText(url);
       setCopied(true);
       toast.success("Share link copied.");
       window.setTimeout(() => setCopied(false), 1800);
