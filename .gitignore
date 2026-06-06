@@ -57,3 +57,4 @@ temp/
 *~
 *.pt
 *.safetensors
+*.csv

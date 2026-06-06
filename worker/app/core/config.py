@@ -46,13 +46,13 @@ class Settings(BaseModel):
             model_path=Path(
                 os.getenv(
                     "BANDGAP_MODEL_PATH",
-                    str(WORKER_ROOT / "models" / "bandgap" / "best_bandgap_model.pt"),
+                    str(WORKER_ROOT / "models" / "band_gap" / "best_bandgap_model.pt"),
                 )
             ),
             tokenizer_dir=Path(
                 os.getenv(
                     "BANDGAP_TOKENIZER_DIR",
-                    str(WORKER_ROOT / "models" / "bandgap" / "tokenizer"),
+                    str(WORKER_ROOT / "models" / "band_gap" / "tokenizer"),
                 )
             ),
             max_length=int(os.getenv("BANDGAP_MAX_LENGTH", "256")),
