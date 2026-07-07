@@ -31,30 +31,30 @@ const contributors = [
   {
     name: 'Lokesh',
     role: 'Research & Project Architecture Design with Model Development',
-    linkedin: '#',
-    github: '#',
-    email: '#',
+    linkedin: 'https://www.linkedin.com/in/lokesh-nadigoti-811810325',
+    github: 'https://github.com/Lokesh-200625/',
+    email: 'lokeshnadigoti@gmail.com',
   },
   {
     name: 'Saqib',
     role: 'Model Development and FastAPI Integration',
-    linkedin: '#',
+    linkedin: 'https://www.linkedin.com/in/saqib-ansari-97885b30a',
     github: 'https://github.com/saqib-svg',
-    email: '#',
+    email: 'mohammadsaqibansari42@gmail.com',
   },
   {
     name: 'Abdul Bari',
     role: 'Model Development',
-    linkedin: '#',
-    github: '#',
-    email: '#',
+    linkedin: 'https://www.linkedin.com/in/md-abdul-bari-318330328',
+    github: 'https://github.com/abdulbarimr10-ai',
+    email: 'abdulbarimr10@gmail.com',
   },
   {
     name: 'Ashfaq',
     role: 'Model Development',
-    linkedin: '#',
-    github: '#',
-    email: '#',
+    linkedin: 'https://www.linkedin.com/in/ashfaq-ahmed-5557b9397',
+    github: 'https://github.com/ashfaqahmed9639-gif',
+    email: 'ashfaqahmed9639@gmail.com',
   }
 ];
 
